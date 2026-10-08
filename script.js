@@ -1,16 +1,41 @@
 // ============================================================
 //  STUDENT PORTFOLIO — script.js
-//  Admin/Viewer Mode | LocalStorage Persistence | Full CRUD
+//  Firebase Firestore Realtime Sync | Admin/Viewer Mode | Full CRUD
 // ============================================================
 
-'use strict';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc, 
+  collection, 
+  getDocs, 
+  setDoc as setDocWork, 
+  deleteDoc, 
+  onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+/* ── Firebase Configuration ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyC-MuR4A-8nn9qAPuRO1hzR7uGSEMP18tI",
+  authDomain: "alcaydekurt-portfolio.firebaseapp.com",
+  projectId: "alcaydekurt-portfolio",
+  storageBucket: "alcaydekurt-portfolio.firebasestorage.app",
+  messagingSenderId: "257975218911",
+  appId: "1:257975218911:web:d5a7e0dd3db65f4a49ef6a"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const PROFILE_DOC_ID = 'main_profile';
+const WORKS_COLLECTION = 'school_works';
 
 /* ── Constants ── */
 const ADMIN_PASSWORD = 'kurtdcit26';
 const LS_PROFILE_KEY = 'portfolio_profile';
 const LS_WORKS_KEY   = 'portfolio_works';
-const LS_VERSION_KEY = 'portfolio_version';
-const DATA_VERSION   = '1.2'; // bump this whenever defaults change
 
 /* ── Default Data ── */
 const DEFAULT_PROFILE = {
@@ -36,41 +61,9 @@ let state = {
   searchQuery:      '',
   editingWorkId:    null,
   previewingWorkId: null,
-  profile:          null,
+  profile:          { ...DEFAULT_PROFILE },
   works:            [],
 };
-
-/* ── LocalStorage Helpers ── */
-function loadData() {
-  try {
-    // Reset to defaults if data version has changed
-    const storedVersion = localStorage.getItem(LS_VERSION_KEY);
-    if (storedVersion !== DATA_VERSION) {
-      localStorage.removeItem(LS_PROFILE_KEY);
-      localStorage.removeItem(LS_WORKS_KEY);
-      localStorage.setItem(LS_VERSION_KEY, DATA_VERSION);
-    }
-    const p = localStorage.getItem(LS_PROFILE_KEY);
-    const w = localStorage.getItem(LS_WORKS_KEY);
-    state.profile = p ? JSON.parse(p) : { ...DEFAULT_PROFILE };
-    state.works   = w ? JSON.parse(w) : DEFAULT_WORKS.map(x => ({ ...x }));
-  } catch {
-    state.profile = { ...DEFAULT_PROFILE };
-    state.works   = DEFAULT_WORKS.map(x => ({ ...x }));
-  }
-}
-
-function saveProfile() {
-  localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(state.profile));
-}
-
-function saveWorks() {
-  localStorage.setItem(LS_WORKS_KEY, JSON.stringify(state.works));
-}
-
-function generateId() {
-  return 'w' + Date.now() + Math.random().toString(36).slice(2, 6);
-}
 
 /* ── DOM Helpers ── */
 const $ = id => document.getElementById(id);
@@ -84,6 +77,7 @@ const el = (tag, cls, html) => {
 /* ── Toast ── */
 function showToast(msg, type = 'success') {
   const container = $('toast-container');
+  if (!container) return;
   const toast = el('div', `toast ${type}`);
   toast.innerHTML = `<span class="toast-dot"></span>${msg}`;
   container.appendChild(toast);
@@ -102,7 +96,8 @@ function formatDate(iso) {
 
 /* ── Nav Scroll Effect ── */
 window.addEventListener('scroll', () => {
-  document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 10);
+  const navbar = document.querySelector('.navbar');
+  if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 10);
 });
 
 /* ── Tab Switching ── */
@@ -114,7 +109,6 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => {
     p.classList.toggle('active', p.id === `panel-${tab}`);
   });
-  // Update mobile drawer tabs too
   document.querySelectorAll('.drawer-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
@@ -123,7 +117,7 @@ function switchTab(tab) {
 /* ── Hamburger ── */
 function toggleDrawer() {
   const drawer = $('nav-drawer');
-  drawer.classList.toggle('open');
+  if (drawer) drawer.classList.toggle('open');
 }
 
 /* ── Admin Mode ── */
@@ -155,9 +149,14 @@ function submitAdminLogin() {
 function enterAdmin() {
   state.isAdmin = true;
   document.body.classList.add('admin-mode');
-  $('btn-admin').classList.add('active');
-  $('btn-admin').querySelector('span').textContent = 'Exit Admin';
-  $('admin-badge').classList.add('visible');
+  const btn = $('btn-admin');
+  if (btn) {
+    btn.classList.add('active');
+    const span = btn.querySelector('span');
+    if (span) span.textContent = 'Exit Admin';
+  }
+  const badge = $('admin-badge');
+  if (badge) badge.classList.add('visible');
   renderProfile();
   showToast('Admin mode activated. Full controls unlocked.', 'success');
 }
@@ -165,9 +164,14 @@ function enterAdmin() {
 function exitAdmin() {
   state.isAdmin = false;
   document.body.classList.remove('admin-mode');
-  $('btn-admin').classList.remove('active');
-  $('btn-admin').querySelector('span').textContent = 'Admin Access';
-  $('admin-badge').classList.remove('visible');
+  const btn = $('btn-admin');
+  if (btn) {
+    btn.classList.remove('active');
+    const span = btn.querySelector('span');
+    if (span) span.textContent = 'Admin Access';
+  }
+  const badge = $('admin-badge');
+  if (badge) badge.classList.remove('visible');
   renderProfile();
   showToast('Exited admin mode.', 'success');
 }
@@ -175,20 +179,25 @@ function exitAdmin() {
 /* ── Modals ── */
 function openModal(id) {
   const overlay = $(id);
+  if (!overlay) return;
   overlay.classList.add('open');
-  overlay.querySelector('.modal').style.animation = 'none';
-  requestAnimationFrame(() => {
-    overlay.querySelector('.modal').style.animation = '';
-  });
+  const modal = overlay.querySelector('.modal');
+  if (modal) {
+    modal.style.animation = 'none';
+    requestAnimationFrame(() => {
+      modal.style.animation = '';
+    });
+  }
 }
 
 function closeModal(id) {
-  $(id).classList.remove('open');
+  const overlay = $(id);
+  if (overlay) overlay.classList.remove('open');
 }
 
 // Close modal on overlay click
 document.addEventListener('click', e => {
-  if (e.target.classList.contains('modal-overlay')) {
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('open');
   }
 });
@@ -198,8 +207,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
   }
-  if (e.key === 'Enter' && $('modal-admin').classList.contains('open')) {
-    submitAdminLogin();
+  if (e.key === 'Enter') {
+    const adminModal = $('modal-admin');
+    if (adminModal && adminModal.classList.contains('open')) {
+      submitAdminLogin();
+    }
   }
 });
 
@@ -207,6 +219,7 @@ document.addEventListener('keydown', e => {
 function togglePwVisibility() {
   const input = $('admin-pw-input');
   const btn   = $('pw-toggle-btn');
+  if (!input || !btn) return;
   if (input.type === 'password') {
     input.type = 'text';
     btn.textContent = '🙈';
@@ -267,6 +280,7 @@ function renderProfile() {
 
 function renderContactPills(p) {
   const container = $('profile-contacts');
+  if (!container) return;
   container.innerHTML = '';
   const links = [
     { label: p.email, href: `mailto:${p.email}`, icon: '✉️' },
@@ -285,9 +299,10 @@ function renderContactPills(p) {
   });
 }
 
-function saveProfileChanges() {
+/* ── Save Profile to Firestore & LocalStorage ── */
+async function saveProfileChanges() {
   if (!state.isAdmin) return;
-  state.profile = {
+  const updatedProfile = {
     ...state.profile,
     name:     $('edit-name').value.trim(),
     bio:      $('edit-bio').value.trim(),
@@ -299,9 +314,19 @@ function saveProfileChanges() {
     email:    $('edit-email').value.trim(),
     phone:    $('edit-phone').value.trim(),
   };
-  saveProfile();
+
+  state.profile = updatedProfile;
+  localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(updatedProfile));
   renderProfile();
-  showToast('Profile saved successfully!', 'success');
+
+  try {
+    const profileRef = doc(db, 'portfolio', PROFILE_DOC_ID);
+    await setDoc(profileRef, updatedProfile, { merge: true });
+    showToast('Profile saved & synced to cloud!', 'success');
+  } catch (error) {
+    console.error('Error saving profile to Firestore:', error);
+    showToast('Saved locally (Firestore error: ' + error.message + ')', 'error');
+  }
 }
 
 /* ── Photo Upload ── */
@@ -312,15 +337,59 @@ function triggerPhotoUpload() {
 $('photo-file-input').addEventListener('change', function () {
   const file = this.files[0];
   if (!file) return;
+
+  // Compress / resize image if needed before saving base64 to avoid Firestore 1MB document limit
   const reader = new FileReader();
-  reader.onload = e => {
-    state.profile.photo = e.target.result;
-    saveProfile();
-    renderProfile();
-    showToast('Profile photo updated!', 'success');
+  reader.onload = async e => {
+    const rawDataUrl = e.target.result;
+    
+    // Scale image down if high resolution
+    resizeImage(rawDataUrl, 400, 400, async (compressedUrl) => {
+      state.profile.photo = compressedUrl;
+      localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(state.profile));
+      renderProfile();
+
+      try {
+        const profileRef = doc(db, 'portfolio', PROFILE_DOC_ID);
+        await setDoc(profileRef, { photo: compressedUrl }, { merge: true });
+        showToast('Profile photo updated & synced!', 'success');
+      } catch (err) {
+        console.error('Firestore photo save error:', err);
+        showToast('Photo saved locally (Cloud sync failed)', 'error');
+      }
+    });
   };
   reader.readAsDataURL(file);
 });
+
+// Helper to keep profile image lightweight for instant cross-device sync
+function resizeImage(dataUrl, maxWidth, maxHeight, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    callback(canvas.toDataURL('image/jpeg', 0.82));
+  };
+  img.src = dataUrl;
+}
 
 /* ── Works Rendering ── */
 function getFilteredWorks() {
@@ -334,6 +403,7 @@ function getFilteredWorks() {
 
 function renderWorks() {
   const grid = $('works-grid');
+  if (!grid) return;
   grid.innerHTML = '';
 
   // Update filter counts
@@ -522,12 +592,6 @@ function setFilter(filter) {
   renderWorks();
 }
 
-/* ── Search ── */
-$('works-search-input').addEventListener('input', function () {
-  state.searchQuery = this.value;
-  renderWorks();
-});
-
 /* ── Add / Edit Work Modal ── */
 function openAddWork() {
   if (!state.isAdmin) return;
@@ -554,7 +618,7 @@ function openEditWork(id) {
   $('work-title').value       = work.title;
   $('work-category').value    = work.category;
   $('work-date').value        = work.date;
-  $('work-description').value = work.description;
+  $('work-description').value = work.description || '';
 
   if (work.fileName) {
     $('upload-file-name').textContent       = work.fileName;
@@ -567,7 +631,7 @@ function openEditWork(id) {
   openModal('modal-work');
 }
 
-function submitWorkForm() {
+async function submitWorkForm() {
   const title    = $('work-title').value.trim();
   const category = $('work-category').value;
   const date     = $('work-date').value;
@@ -581,37 +645,67 @@ function submitWorkForm() {
   const fileInput = $('work-file-input');
   const file = fileInput.files[0];
 
-  function finalize(fileData, fileName) {
+  async function finalize(fileData, fileName) {
     if (state.editingWorkId) {
       // Edit
-      const idx = state.works.findIndex(w => w.id === state.editingWorkId);
-      if (idx !== -1) {
-        state.works[idx] = {
-          ...state.works[idx],
-          title, category, date,
-          description: desc,
-          ...(fileData !== undefined ? { file: fileData, fileName } : {}),
-        };
+      const workId = state.editingWorkId;
+      const idx = state.works.findIndex(w => w.id === workId);
+      const existing = idx !== -1 ? state.works[idx] : {};
+      const updatedWork = {
+        ...existing,
+        id: workId,
+        title,
+        category,
+        date,
+        description: desc,
+        ...(fileData !== undefined ? { file: fileData, fileName } : {})
+      };
+
+      if (idx !== -1) state.works[idx] = updatedWork;
+
+      try {
+        await setDocWork(doc(db, WORKS_COLLECTION, workId), updatedWork);
+        showToast('Work updated & synced across devices!', 'success');
+      } catch (err) {
+        console.error('Error updating work in Firestore:', err);
+        showToast('Saved locally (Sync error)', 'error');
       }
-      showToast('Work updated successfully!', 'success');
     } else {
       // Add
-      state.works.unshift({
-        id: generateId(),
-        title, category, date,
+      const newId = 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const newWork = {
+        id: newId,
+        title,
+        category,
+        date,
         description: desc,
         file: fileData || null,
-        fileName: fileName || (title + '.pdf'),
-      });
-      showToast('Work added successfully!', 'success');
+        fileName: fileName || (file ? file.name : (title + '.pdf')),
+        createdAt: Date.now()
+      };
+
+      state.works.unshift(newWork);
+
+      try {
+        await setDocWork(doc(db, WORKS_COLLECTION, newId), newWork);
+        showToast('Work added & synced across all devices!', 'success');
+      } catch (err) {
+        console.error('Error adding work to Firestore:', err);
+        showToast('Saved locally (Sync error)', 'error');
+      }
     }
-    saveWorks();
+
+    localStorage.setItem(LS_WORKS_KEY, JSON.stringify(state.works));
     closeModal('modal-work');
     renderWorks();
-    renderProfile(); // update stats
+    renderProfile();
   }
 
   if (file) {
+    // Check file size (Firestore documents have 1MB limit for inline base64)
+    if (file.size > 850 * 1024) {
+      showToast('Notice: For files over 850KB, consider smaller files or compressed PDFs for Firestore.', 'error');
+    }
     const reader = new FileReader();
     reader.onload = e => finalize(e.target.result, file.name);
     reader.readAsDataURL(file);
@@ -619,37 +713,6 @@ function submitWorkForm() {
     finalize(undefined, undefined);
   }
 }
-
-/* ── File Upload UX ── */
-const uploadZone = $('upload-zone');
-const workFileInput = $('work-file-input');
-
-uploadZone.addEventListener('click', () => workFileInput.click());
-
-workFileInput.addEventListener('change', function () {
-  if (this.files[0]) {
-    $('upload-file-name').textContent        = this.files[0].name;
-    $('selected-file-display').style.display = 'block';
-  }
-});
-
-uploadZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  uploadZone.classList.add('dragover');
-});
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    workFileInput.files = dt.files;
-    $('upload-file-name').textContent        = file.name;
-    $('selected-file-display').style.display = 'block';
-  }
-});
 
 /* ── Delete Work ── */
 let pendingDeleteId = null;
@@ -662,30 +725,162 @@ function confirmDeleteWork(id) {
   openModal('modal-delete');
 }
 
-function executeDelete() {
+async function executeDelete() {
   if (!pendingDeleteId) return;
-  state.works = state.works.filter(w => w.id !== pendingDeleteId);
+  const idToDelete = pendingDeleteId;
+  state.works = state.works.filter(w => w.id !== idToDelete);
   pendingDeleteId = null;
-  saveWorks();
+
+  localStorage.setItem(LS_WORKS_KEY, JSON.stringify(state.works));
   closeModal('modal-delete');
   renderWorks();
   renderProfile();
-  showToast('Item deleted.', 'success');
+
+  try {
+    await deleteDoc(doc(db, WORKS_COLLECTION, idToDelete));
+    showToast('Item deleted across all devices.', 'success');
+  } catch (err) {
+    console.error('Error deleting from Firestore:', err);
+    showToast('Deleted locally (Sync error)', 'error');
+  }
 }
 
+/* ── Setup File Upload UX ── */
+function setupUploadUX() {
+  const uploadZone = $('upload-zone');
+  const workFileInput = $('work-file-input');
 
+  if (uploadZone && workFileInput) {
+    uploadZone.addEventListener('click', () => workFileInput.click());
+
+    workFileInput.addEventListener('change', function () {
+      if (this.files[0]) {
+        $('upload-file-name').textContent        = this.files[0].name;
+        $('selected-file-display').style.display = 'block';
+      }
+    });
+
+    uploadZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        workFileInput.files = dt.files;
+        $('upload-file-name').textContent        = file.name;
+        $('selected-file-display').style.display = 'block';
+      }
+    });
+  }
+}
+
+/* ── Real-time Firestore Listeners ── */
+function setupFirestoreListeners() {
+  // 1. Profile real-time sync
+  try {
+    const profileRef = doc(db, 'portfolio', PROFILE_DOC_ID);
+    onSnapshot(profileRef, snapshot => {
+      if (snapshot.exists()) {
+        state.profile = { ...DEFAULT_PROFILE, ...snapshot.data() };
+        localStorage.setItem(LS_PROFILE_KEY, JSON.stringify(state.profile));
+        renderProfile();
+      } else {
+        // Create initial profile in Firestore if not existing yet
+        setDoc(profileRef, DEFAULT_PROFILE);
+      }
+    }, err => {
+      console.warn('Firestore profile listener notice:', err);
+    });
+  } catch (err) {
+    console.error('Profile listener init error:', err);
+  }
+
+  // 2. School works real-time sync
+  try {
+    const worksCollectionRef = collection(db, WORKS_COLLECTION);
+    onSnapshot(worksCollectionRef, snapshot => {
+      const worksList = [];
+      snapshot.forEach(docSnap => {
+        worksList.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      // Sort newest first
+      worksList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      
+      if (worksList.length > 0 || snapshot.metadata.hasPendingWrites === false) {
+        state.works = worksList;
+        localStorage.setItem(LS_WORKS_KEY, JSON.stringify(worksList));
+        renderWorks();
+        renderProfile();
+      }
+    }, err => {
+      console.warn('Firestore works listener notice:', err);
+    });
+  } catch (err) {
+    console.error('Works listener init error:', err);
+  }
+}
+
+/* ── Local Fallback Loader ── */
+function loadLocalFallback() {
+  try {
+    const p = localStorage.getItem(LS_PROFILE_KEY);
+    const w = localStorage.getItem(LS_WORKS_KEY);
+    if (p) state.profile = JSON.parse(p);
+    if (w) state.works   = JSON.parse(w);
+  } catch (e) {
+    console.warn('LocalStorage parse notice:', e);
+  }
+}
+
+/* ── Expose functions to global window for HTML onclick handlers ── */
+window.switchTab            = switchTab;
+window.toggleDrawer         = toggleDrawer;
+window.openAdminModal       = openAdminModal;
+window.submitAdminLogin     = submitAdminLogin;
+window.exitAdmin            = exitAdmin;
+window.openModal            = openModal;
+window.closeModal           = closeModal;
+window.togglePwVisibility   = togglePwVisibility;
+window.saveProfileChanges   = saveProfileChanges;
+window.triggerPhotoUpload   = triggerPhotoUpload;
+window.openAddWork          = openAddWork;
+window.openEditWork         = openEditWork;
+window.submitWorkForm       = submitWorkForm;
+window.confirmDeleteWork    = confirmDeleteWork;
+window.executeDelete        = executeDelete;
+window.downloadWork         = downloadWork;
+window.downloadWorkById     = downloadWorkById;
+window.openPreview          = openPreview;
+window.setFilter            = setFilter;
 
 /* ── Init ── */
 function init() {
-  loadData();
+  loadLocalFallback();
   renderProfile();
   renderWorks();
+  setupUploadUX();
+
+  // Search input
+  const searchInput = $('works-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      state.searchQuery = this.value;
+      renderWorks();
+    });
+  }
 
   // Attach tab listeners
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       switchTab(btn.dataset.tab);
-      $('nav-drawer').classList.remove('open');
+      const drawer = $('nav-drawer');
+      if (drawer) drawer.classList.remove('open');
     });
   });
 
@@ -693,6 +888,13 @@ function init() {
   document.querySelectorAll('.filter-pill').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
   });
+
+  // Start real-time Firestore sync
+  setupFirestoreListeners();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
