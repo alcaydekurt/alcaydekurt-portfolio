@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Kurt Joshua Alcayde — Student Portfolio showcasing academic works, exams, quizzes, and activities in Computer Science." />
+  <meta name="keywords" content="student portfolio, computer science, school works, Kurt Joshua Alcayde" />
+  <meta property="og:title" content="Kurt Joshua Alcayde | Student Portfolio" />
+  <meta property="og:description" content="Academic portfolio featuring school works, exams, quizzes, and activities." />
+  <title>Kurt Joshua Alcayde | Student Portfolio</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Hidden file inputs -->
+  <input type="file" id="photo-file-input" accept="image/*" style="display:none" />
+  <input type="file" id="work-file-input"  accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.jpg,.png,.zip,.ipynb" style="display:none" />
+</head>
+<body>
+
+<!-- ── Animated Background ── -->
+<div class="bg-mesh" aria-hidden="true"></div>
+
+<!-- ============================================================
+     NAVBAR
+     ============================================================ -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+
+  <!-- Logo -->
+  <div class="nav-logo">
+    <div class="nav-logo-icon" aria-hidden="true">🎓</div>
+    <span class="nav-logo-text">KJA Portfolio</span>
+  </div>
+
+  <!-- Tab Pills (desktop) -->
+  <div class="nav-tabs" role="tablist" aria-label="Page tabs">
+    <button class="nav-tab active" data-tab="profile" role="tab" aria-selected="true"  id="tab-profile">Profile</button>
+    <button class="nav-tab"        data-tab="works"   role="tab" aria-selected="false" id="tab-works">School Works</button>
+  </div>
+
+  <div class="nav-spacer"></div>
+
+
+  <!-- Admin Badge -->
+  <div class="admin-badge" id="admin-badge" aria-live="polite">Admin</div>
+
+  <!-- Admin Toggle -->
+  <button class="btn-admin" id="btn-admin" onclick="openAdminModal()" aria-label="Toggle admin access">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    <span>Admin Access</span>
+  </button>
+
+  <!-- Hamburger (mobile) -->
+  <button class="nav-hamburger" id="nav-hamburger" onclick="toggleDrawer()" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Mobile navigation">
+  <div class="nav-tabs" role="tablist">
+    <button class="nav-tab drawer-tab active" data-tab="profile">Profile</button>
+    <button class="nav-tab drawer-tab"        data-tab="works">School Works</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<main class="main-content">
+
+  <!-- ── PROFILE TAB ── -->
+  <div class="tab-panel active" id="panel-profile" role="tabpanel" aria-labelledby="tab-profile">
+    <section class="profile-section">
+
+      <!-- Hero Card -->
+      <div class="profile-hero">
+
+        <!-- Photo Column -->
+        <div class="profile-photo-wrap">
+          <div class="profile-photo-ring" aria-label="Profile photo">
+            <div class="photo-placeholder" id="photo-placeholder">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              No Photo
+            </div>
+            <img src="" alt="Profile photo" id="profile-photo" class="hidden" />
+          </div>
+          <button class="btn-change-photo" onclick="triggerPhotoUpload()" aria-label="Change profile photo">
+            📷 Change Photo
+          </button>
+        </div>
+
+        <!-- Info Column -->
+        <div class="profile-info">
+
+          <!-- Name Row -->
+          <div class="profile-name-row">
+            <h1 id="profile-name-display">Kurt Joshua Alcayde</h1>
+            <span class="profile-degree-tag" id="profile-degree-tag">BS Computer Science</span>
+          </div>
+
+          <!-- Bio -->
+          <p id="profile-bio-display"></p>
+
+          <!-- Stats -->
+          <div class="profile-stats">
+            <div class="stat-item">
+              <span class="stat-value" id="stat-exams">0</span>
+              <span class="stat-label">Exams</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="stat-quizzes">0</span>
+              <span class="stat-label">Quizzes</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="stat-activities">0</span>
+              <span class="stat-label">Activities</span>
+            </div>
+          </div>
+
+          <!-- Contact Pills -->
+          <div class="profile-contacts" id="profile-contacts" aria-label="Contact information"></div>
+
+          <!-- Admin Edit Fields -->
+          <div class="edit-field" id="edit-field-name">
+            <label for="edit-name">Full Name</label>
+            <input type="text" id="edit-name" placeholder="Your full name" maxlength="80" />
+          </div>
+          <div class="edit-field" id="edit-field-bio">
+            <label for="edit-bio">Bio</label>
+            <textarea id="edit-bio" rows="3" placeholder="Write your bio here..."></textarea>
+          </div>
+          <div class="edit-field" id="edit-field-degree">
+            <label for="edit-degree">Degree / Program</label>
+            <input type="text" id="edit-degree" placeholder="e.g. Bachelor of Science in Computer Science" />
+          </div>
+          <div class="edit-field" id="edit-field-school" style="flex-direction:row; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-school">School / University</label>
+              <input type="text" id="edit-school" placeholder="Your university name" />
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-year">Year Level</label>
+              <input type="text" id="edit-year" placeholder="e.g. 3rd Year" maxlength="20" />
+            </div>
+          </div>
+          <div class="edit-field" id="edit-field-links" style="flex-direction:row; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-github">GitHub URL</label>
+              <input type="url" id="edit-github" placeholder="https://github.com/username" />
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-linkedin">LinkedIn URL</label>
+              <input type="url" id="edit-linkedin" placeholder="https://linkedin.com/in/username" />
+            </div>
+          </div>
+          <div class="edit-field" id="edit-field-contact" style="flex-direction:row; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-email">Academic Email</label>
+              <input type="email" id="edit-email" placeholder="you@university.edu" />
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <label for="edit-phone">Phone Number</label>
+              <input type="tel" id="edit-phone" placeholder="+63 912 345 6789" />
+            </div>
+          </div>
+
+          <button class="btn-save-profile" onclick="saveProfileChanges()" id="btn-save-profile" aria-label="Save profile changes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Changes
+          </button>
+        </div>
+      </div><!-- /profile-hero -->
+
+      <!-- About Cards -->
+      <div class="profile-about-section">
+
+        <!-- Academic Info -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <div class="info-card-icon purple">🏛️</div>
+            <span class="info-card-title">Academic Info</span>
+          </div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="key">School</span>     <span class="val" id="info-school">—</span></div>
+            <div class="info-row"><span class="key">Year Level</span> <span class="val" id="info-year">—</span></div>
+            <div class="info-row"><span class="key">Program</span>    <span class="val" id="info-degree">—</span></div>
+          </div>
+        </div>
+
+        <!-- Technical Skills -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <div class="info-card-icon teal">⚙️</div>
+            <span class="info-card-title">Technical Skills</span>
+          </div>
+          <div class="info-card-body">
+            <div class="skill-tags">
+              <span class="skill-tag">HTML5</span>
+              <span class="skill-tag">CSS3</span>
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag teal">React</span>
+              <span class="skill-tag teal">Node.js</span>
+              <span class="skill-tag teal">SQL</span>
+              <span class="skill-tag teal">Git</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interests -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <div class="info-card-icon gold">💡</div>
+            <span class="info-card-title">Interests</span>
+          </div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="key">Focus Area</span>  <span class="val">Game Development</span></div>
+            <div class="info-row"><span class="key">Engines</span>     <span class="val">Unity / Godot</span></div>
+            <div class="info-row"><span class="key">Genre</span>       <span class="val">2D / Indie Games</span></div>
+            <div class="info-row"><span class="key">Skills</span>      <span class="val">C# / GDScript</span></div>
+          </div>
+        </div>
+
+      </div><!-- /profile-about-section -->
+
+    </section>
+  </div><!-- /panel-profile -->
+
+  <!-- ── SCHOOL WORKS TAB ── -->
+  <div class="tab-panel" id="panel-works" role="tabpanel" aria-labelledby="tab-works">
+    <section class="works-section">
+
+      <!-- Section Header -->
+      <div class="works-header">
+        <div class="works-title">
+          <h1>School Works</h1>
+          <p>Exams, quizzes, and activities from my academic journey.</p>
+        </div>
+        <button class="btn-add-work" onclick="openAddWork()" id="btn-add-work" aria-label="Add new school work">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Work
+        </button>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar" role="toolbar" aria-label="Category filters">
+        <span class="filter-label">Filter</span>
+        <div class="filter-pills">
+          <button class="filter-pill active" data-filter="all"      aria-pressed="true"  aria-label="Show all">
+            <span>All</span><span class="filter-count">0</span>
+          </button>
+          <button class="filter-pill" data-filter="exam"     aria-pressed="false" aria-label="Show exams">
+            <span>Exams</span><span class="filter-count">0</span>
+          </button>
+          <button class="filter-pill" data-filter="quiz"     aria-pressed="false" aria-label="Show quizzes">
+            <span>Quizzes</span><span class="filter-count">0</span>
+          </button>
+          <button class="filter-pill" data-filter="activity" aria-pressed="false" aria-label="Show activities">
+            <span>Activities</span><span class="filter-count">0</span>
+          </button>
+        </div>
+        <div class="works-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="works-search-input" placeholder="Search works…" aria-label="Search school works" />
+        </div>
+      </div>
+
+      <!-- Works Grid -->
+      <div class="works-grid" id="works-grid" role="list" aria-label="School works"></div>
+
+    </section>
+  </div><!-- /panel-works -->
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer role="contentinfo">
+  <p>© 2025 <span>Kurt Joshua Alcayde</span> · Student Portfolio · All rights reserved.</p>
+</footer>
+
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="modal-admin" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-admin')" aria-label="Close">&times;</button>
+    <div class="modal-header">
+      <div class="modal-icon purple">🔐</div>
+      <h2 class="modal-title" id="admin-modal-title">Admin Access</h2>
+      <p class="modal-subtitle">Enter your admin password to unlock edit controls.</p>
+    </div>
+    <div class="form-group">
+      <label for="admin-pw-input">Password</label>
+      <div class="pw-wrap">
+        <input class="form-control" type="password" id="admin-pw-input" placeholder="Enter password…" autocomplete="current-password" />
+        <button class="pw-toggle" id="pw-toggle-btn" onclick="togglePwVisibility()" type="button" aria-label="Toggle password visibility">👁</button>
+      </div>
+      <div class="pw-error" id="pw-error" aria-live="polite">
+        ⚠️ Incorrect password. Please try again.
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost"    onclick="closeModal('modal-admin')"  type="button">Cancel</button>
+      <button class="btn btn-primary"  onclick="submitAdminLogin()"          type="button" id="btn-login">
+        🔓 Unlock
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Work Modal -->
+<div class="modal-overlay" id="modal-work" role="dialog" aria-modal="true" aria-labelledby="work-modal-title">
+  <div class="modal modal-large">
+    <button class="modal-close" onclick="closeModal('modal-work')" aria-label="Close">&times;</button>
+    <div class="modal-header">
+      <div class="modal-icon teal" id="work-modal-icon">📄</div>
+      <h2 class="modal-title" id="work-modal-title">Add School Work</h2>
+      <p class="modal-subtitle" id="work-modal-subtitle">Fill in the details for the new item.</p>
+    </div>
+    <form id="work-form" onsubmit="event.preventDefault(); submitWorkForm();">
+      <div class="form-group">
+        <label for="work-title">Title <span style="color:var(--danger)">*</span></label>
+        <input class="form-control" type="text" id="work-title" placeholder="e.g. Midterm Exam — Data Structures" maxlength="120" required />
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="form-group">
+          <label for="work-category">Category <span style="color:var(--danger)">*</span></label>
+          <select class="form-control" id="work-category" required>
+            <option value="">Select category…</option>
+            <option value="exam">Exam</option>
+            <option value="quiz">Quiz</option>
+            <option value="activity">Activity</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="work-date">Date <span style="color:var(--danger)">*</span></label>
+          <input class="form-control" type="date" id="work-date" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="work-description">Description</label>
+        <textarea class="form-control" id="work-description" rows="3" placeholder="Describe the content or scope of this work… (optional)"></textarea>
+      </div>
+      <div class="form-group">
+        <label>File Attachment (optional)</label>
+        <div class="upload-zone" id="upload-zone" role="button" aria-label="Upload file">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p><strong>Click to upload</strong> or drag and drop</p>
+          <p>PDF, DOCX, PPTX, XLSX, JPG, PNG, ZIP, IPYNB</p>
+        </div>
+        <div id="selected-file-display" style="display:none; margin-top:8px;">
+          <span class="upload-file-name" id="upload-file-name"></span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost"   type="button" onclick="closeModal('modal-work')">Cancel</button>
+        <button class="btn btn-primary" type="submit"  id="btn-save-work">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="modal-delete" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-delete')" aria-label="Close">&times;</button>
+    <div class="modal-header">
+      <div class="modal-icon red">🗑️</div>
+      <h2 class="modal-title" id="delete-modal-title">Delete Item</h2>
+      <p class="modal-subtitle">Are you sure you want to delete <strong id="delete-confirm-title"></strong>? This cannot be undone.</p>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost"  type="button" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn btn-danger" type="button" onclick="executeDelete()" id="btn-confirm-delete">
+        🗑️ Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="modal-preview" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title">
+  <div class="modal modal-preview">
+    <div class="preview-modal-header">
+      <div class="preview-title-group">
+        <span class="preview-file-icon" id="preview-file-icon">📄</span>
+        <div>
+          <h2 class="modal-title" id="preview-modal-title">File Preview</h2>
+          <p class="modal-subtitle" id="preview-modal-subtitle"></p>
+        </div>
+      </div>
+      <div class="preview-header-actions">
+        <button class="btn btn-ghost btn-sm" id="preview-download-btn" onclick="downloadWorkById()" aria-label="Download file">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button class="modal-close" onclick="closeModal('modal-preview')" aria-label="Close" style="position:static; margin:0;">&times;</button>
+      </div>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+
+<script src="script.js"></script>
+</body>
+</html>
