@@ -8,7 +8,7 @@
   <meta property="og:title" content="Kurt Joshua Alcayde | Student Portfolio" />
   <meta property="og:description" content="Academic portfolio featuring school works, exams, quizzes, and activities." />
   <title>Kurt Joshua Alcayde | Student Portfolio</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2" />
   <!-- Hidden file inputs -->
   <input type="file" id="photo-file-input" accept="image/*" style="display:none" />
   <input type="file" id="work-file-input"  accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.jpg,.png,.zip,.ipynb" style="display:none" />
@@ -22,58 +22,37 @@
      NAVBAR
      ============================================================ -->
 <nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="nav-brand-row">
+    <!-- Logo -->
+    <div class="nav-logo">
+      <div class="nav-logo-icon" aria-hidden="true">🎓</div>
+      <span class="nav-logo-text">KJA Portfolio</span>
+    </div>
 
-  <!-- Logo -->
-  <div class="nav-logo">
-    <div class="nav-logo-icon" aria-hidden="true">🎓</div>
-    <span class="nav-logo-text">KJA Portfolio</span>
-  </div>
+    <div class="nav-spacer desktop-only"></div>
 
-  <!-- Tab Pills (desktop) -->
-  <div class="nav-tabs desktop-tabs" role="tablist" aria-label="Page tabs">
-    <button class="nav-tab active" data-tab="profile" role="tab" aria-selected="true"  id="tab-profile">Profile</button>
-    <button class="nav-tab"        data-tab="works"   role="tab" aria-selected="false" id="tab-works">School Works</button>
-  </div>
-
-  <div class="nav-spacer"></div>
-
-  <!-- Admin Badge -->
-  <div class="admin-badge" id="admin-badge" aria-live="polite">Admin</div>
-
-  <!-- Admin Toggle -->
-  <button class="btn-admin" id="btn-admin" onclick="openAdminModal()" aria-label="Toggle admin access">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-    <span>Admin Access</span>
-  </button>
-
-  <!-- Hamburger (mobile) -->
-  <button class="nav-hamburger" id="nav-hamburger" onclick="toggleDrawer()" aria-label="Toggle menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
-
-<!-- Mobile Drawer -->
-<div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Mobile navigation">
-  <div class="drawer-nav-group">
-    <span class="drawer-nav-label">Navigation</span>
-    <div class="drawer-tabs" role="tablist" aria-label="Mobile menu navigation">
-      <button class="drawer-tab active" data-tab="profile" role="tab" aria-selected="true">
-        <span class="drawer-tab-icon">👤</span>
-        <span class="drawer-tab-text">Profile</span>
-      </button>
-      <button class="drawer-tab" data-tab="works" role="tab" aria-selected="false">
-        <span class="drawer-tab-icon">📚</span>
-        <span class="drawer-tab-text">School Works</span>
+    <!-- Admin Badge & Toggle -->
+    <div class="nav-admin-wrap">
+      <div class="admin-badge" id="admin-badge" aria-live="polite">Admin</div>
+      <button class="btn-admin" id="btn-admin" onclick="openAdminModal()" aria-label="Toggle admin access">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span>Admin Access</span>
       </button>
     </div>
   </div>
-  <div class="drawer-footer">
-    <button class="btn-drawer-admin" id="drawer-btn-admin" onclick="openAdminModal(); toggleDrawer(true);" aria-label="Admin Access">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      <span id="drawer-admin-text">Admin Access</span>
+
+  <!-- Tab Pills: ALWAYS VISIBLE on all screens (desktop, tablet, mobile) -->
+  <div class="nav-tabs" role="tablist" aria-label="Page navigation tabs">
+    <button class="nav-tab active" data-tab="profile" role="tab" aria-selected="true" id="tab-profile">
+      <span class="tab-icon">👤</span>
+      <span>Profile</span>
+    </button>
+    <button class="nav-tab" data-tab="works" role="tab" aria-selected="false" id="tab-works">
+      <span class="tab-icon">📚</span>
+      <span>School Works</span>
     </button>
   </div>
-</div>
+</nav>
 
 <!-- ============================================================
      MAIN CONTENT
@@ -420,22 +399,10 @@
   </div>
 </div>
 
-<!-- Mobile Bottom Navigation Bar -->
-<nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile navigation">
-  <button class="mobile-bottom-btn active" data-tab="profile" role="tab" aria-selected="true" id="mobile-tab-profile">
-    <span class="mobile-bottom-icon">👤</span>
-    <span class="mobile-bottom-label">Profile</span>
-  </button>
-  <button class="mobile-bottom-btn" data-tab="works" role="tab" aria-selected="false" id="mobile-tab-works">
-    <span class="mobile-bottom-icon">📚</span>
-    <span class="mobile-bottom-label">School Works</span>
-  </button>
-</nav>
-
 <!-- Toast Container -->
 <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
 
-<script type="module" src="script.js"></script>
+<script type="module" src="script.js?v=2"></script>
 </body>
 </html>
