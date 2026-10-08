@@ -103,21 +103,40 @@ window.addEventListener('scroll', () => {
 /* ── Tab Switching ── */
 function switchTab(tab) {
   state.activeTab = tab;
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === tab);
+  // Synchronize all tab buttons (desktop, drawer, mobile bottom bar)
+  document.querySelectorAll('[data-tab]').forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.classList.toggle('active', isActive);
+    if (t.hasAttribute('aria-selected')) {
+      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
   });
+  // Switch tab panels
   document.querySelectorAll('.tab-panel').forEach(p => {
     p.classList.toggle('active', p.id === `panel-${tab}`);
   });
-  document.querySelectorAll('.drawer-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === tab);
-  });
+  // Smooth scroll to top on tab switch
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ── Hamburger ── */
-function toggleDrawer() {
+/* ── Hamburger & Mobile Drawer ── */
+function toggleDrawer(forceClose = false) {
   const drawer = $('nav-drawer');
-  if (drawer) drawer.classList.toggle('open');
+  const hamburger = $('nav-hamburger');
+  if (!drawer) return;
+  if (forceClose) {
+    drawer.classList.remove('open');
+    if (hamburger) {
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  } else {
+    const isOpen = drawer.classList.toggle('open');
+    if (hamburger) {
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+  }
 }
 
 /* ── Admin Mode ── */
@@ -155,6 +174,12 @@ function enterAdmin() {
     const span = btn.querySelector('span');
     if (span) span.textContent = 'Exit Admin';
   }
+  const drawerBtn = $('drawer-btn-admin');
+  if (drawerBtn) {
+    drawerBtn.classList.add('active');
+    const drawerSpan = $('drawer-admin-text');
+    if (drawerSpan) drawerSpan.textContent = 'Exit Admin';
+  }
   const badge = $('admin-badge');
   if (badge) badge.classList.add('visible');
   renderProfile();
@@ -169,6 +194,12 @@ function exitAdmin() {
     btn.classList.remove('active');
     const span = btn.querySelector('span');
     if (span) span.textContent = 'Admin Access';
+  }
+  const drawerBtn = $('drawer-btn-admin');
+  if (drawerBtn) {
+    drawerBtn.classList.remove('active');
+    const drawerSpan = $('drawer-admin-text');
+    if (drawerSpan) drawerSpan.textContent = 'Admin Access';
   }
   const badge = $('admin-badge');
   if (badge) badge.classList.remove('visible');
@@ -879,9 +910,19 @@ function init() {
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       switchTab(btn.dataset.tab);
-      const drawer = $('nav-drawer');
-      if (drawer) drawer.classList.remove('open');
+      toggleDrawer(true);
     });
+  });
+
+  // Close drawer when clicking outside
+  document.addEventListener('click', e => {
+    const drawer = $('nav-drawer');
+    const hamburger = $('nav-hamburger');
+    if (drawer && drawer.classList.contains('open')) {
+      if (!drawer.contains(e.target) && !hamburger.contains(e.target)) {
+        toggleDrawer(true);
+      }
+    }
   });
 
   // Attach filter listeners
